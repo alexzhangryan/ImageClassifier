@@ -54,7 +54,10 @@ class SimpleCardClassifer(nn.Module):
         self.features = nn.Sequential(*list(self.base_model.children())[:-1])
         enet_out_size = 1280
         #classifier
-        self.classifier = nn.Linear(enet_out_size, num_classes)
+        self.classifier = nn.Sequential(
+            nn.Flatten(),
+            nn.Linear(enet_out_size, num_classes)
+        )
     def forward(self, x):
         x = self.features(x)
         output = self.classifier(x)
@@ -73,8 +76,7 @@ print(device)
 num_epoch = 5
 train_losses, val_losses = [], []
 
-model = SimpleCardClassifer(num_classes = 53)
-model.too(device)
+model.to(device)
 
 for epoch in range(num_epoch):
     #set model to train
@@ -87,7 +89,7 @@ for epoch in range(num_epoch):
         loss = criterion(outputs, labels)
         loss.backward()
         optimizer.step()
-        running_loss += loss.item() * images.size(0)
+        running_loss += loss.item() * labels.size(0)
     train_loss = running_loss / len(train_loader.dataset)
     train_losses.append(train_loss)
 
@@ -101,9 +103,15 @@ for epoch in range(num_epoch):
             images, labels = images.to(device), labels.to(device)
             outputs = model(images)
             loss = criterion(outputs, labels)
-            running_loss += loss.item() * images.size(0)
+            running_loss += loss.item() * labels.size(0)
     val_loss = running_loss / len(val_loader.dataset)
     val_losses.append(val_loss)
 
     #print epoch stats
     print(f"Epoch {epoch+1}/{num_epoch} - Train loss: {train_loss}, Validation loss: {val_loss}")
+
+plt.plot(train_losses, label='Training loss')
+plt.plot(val_losses, label='Validation loss')
+plt.legend()
+plt.title("Loss over epochs")
+plt.show()
