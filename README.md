@@ -1,1 +1,1 @@
-so far sample pytorch model
+so far sample pytorch model following tutorial by Rob Mulla
